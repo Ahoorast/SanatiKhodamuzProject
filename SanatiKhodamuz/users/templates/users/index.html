@@ -1,16 +1,56 @@
+
 <!DOCTYPE html>
-<html>
-    <head></head>
-    <body>
-        
+<html lang="fa">
+<head>
+<style>
+
+table, th, td {
+  border:2px solid black;
+  text-align: right;
+}
+
+.footnotes {
+    margin-right:240px;
+    text-align: right;
+}   
+
+</style>
+</head>
+<body>
+<h1> <center> سامانه انجام کار </center> </h1>
+
+
+<center>
+<table style="width:75%" dir="rtl">
+    <tr> 
+        <th>عنوان کار</th>
+        <th>ارزش کار</th>
+        <th>تخمین زمانی</th>
+        <th>صاحب کار</th>
+    </tr>  
     {% if latest_work_list %}
-        <ul>
         {% for work in latest_work_list %}
-            <li><a href="{% url 'users:detail' work.id %}">{{ work.title }}</a></li>
+        <tr>
+            <th> {{work.title}} </th>
+            <th> {{work.price}} </th>
+            <th> {{work.estimate}} </th>
+            <th> {{work.employer}} </th>
+            <th> <a href="{% url 'users:detail' work.id %}"> توضیحات </a> </th>
+        </tr>    
         {% endfor %}
-        </ul>
     {% else %}
         <p>No users are available.</p>
     {% endif %}
-    </body>
-</html>
+  </table>
+</center>
+
+
+<div class="footnotes">
+    <p dir="auto"> صفحه {{current_page}} از {{num_pages}} </p>
+    {% if next_page %}
+        <p><a href="{% url 'users:index_by_page' next_page %}"> بعدی </a></p>
+    {% endif %}
+    {% if previous_page %}
+        <p dir="auto"><a href="{% url 'users:index_by_page' previous_page %}">قبلی</a></p>
+    {% endif %}
+</div>

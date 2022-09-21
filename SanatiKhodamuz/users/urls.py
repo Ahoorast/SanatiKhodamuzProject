@@ -7,6 +7,6 @@ app_name = 'users'
 urlpatterns = [
     # ex: /users/
     path('', views.index, name='index'),
-    # ex: /users/5/
-    path('<int:work_id>/', views.detail, name='detail'),
+    path('page/<int:page_index>/', views.index, name='index_by_page'),
+    path('job/<int:work_id>/', views.detail, name='detail'),
 ]
