@@ -18,9 +18,10 @@ class work(models.Model):
     employer = models.ForeignKey(customUser, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     price = models.IntegerField(default=100)
-    timeEstimate = models.TimeField 
+    timeEstimate = models.TimeField #  doesn't work 
     description = models.CharField(max_length=500, default='nothing')
-    pub_date = models.DateTimeField
+    pub_date = models.DateTimeField('date published', default = timezone.now())
+    estimate = models.IntegerField(default=60)
     def __str__(self):
         return self.title
     def was_published_recently(self):

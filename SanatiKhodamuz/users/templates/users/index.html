@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        
+    {% if latest_work_list %}
+        <ul>
+        {% for work in latest_work_list %}
+            <li><a href="{% url 'users:detail' work.id %}">{{ work.title }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users are available.</p>
+    {% endif %}
+    </body>
+</html>
