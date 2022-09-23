@@ -26,3 +26,21 @@ class work(models.Model):
         return self.title
     def was_published_recently(self):
         return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
+    def show_estimate(self):
+        inminutes = self.estimate
+        inhours = inminutes / 60
+        days = inhours / 24
+        minutes = inminutes % 60
+        hours = inhours % 24
+        timeEstimateForWork = ""
+        va = False
+        days = int(days)
+        hours = int(hours)
+        if days:
+            timeEstimateForWork += str(days) + " " + "روز" + " "
+            va = True
+        if hours > 0:
+            if va:
+                timeEstimateForWork += " " + "و "
+            timeEstimateForWork += str(hours) + " " + "ساعت" + " "
+        return timeEstimateForWork
