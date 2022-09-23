@@ -1,0 +1,21 @@
+.container-fluid {
+    direction: rtl;
+    text-align: right;
+}
+
+#main-content {
+    border-right-style: solid;
+    text-align: right;
+}
+
+#tasks-paginator {
+    text-align: center;
+}
+
+thead tr th {
+    text-align: right;
+}
+
+footer {
+    text-align: center;
+}

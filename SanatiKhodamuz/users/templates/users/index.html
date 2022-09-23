@@ -1,56 +1,89 @@
-
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa-IR" dir = "rtl">
 <head>
-<style>
-
-table, th, td {
-  border:2px solid black;
-  text-align: right;
-}
-
-.footnotes {
-    margin-right:240px;
-    text-align: right;
-}   
-
-</style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="main.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<h1> <center> سامانه انجام کار </center> </h1>
-
-
-<center>
-<table style="width:75%" dir="rtl">
-    <tr> 
-        <th>عنوان کار</th>
-        <th>ارزش کار</th>
-        <th>تخمین زمانی</th>
-        <th>صاحب کار</th>
-    </tr>  
-    {% if latest_work_list %}
-        {% for work in latest_work_list %}
-        <tr>
-            <th> {{work.title}} </th>
-            <th> {{work.price}} </th>
-            <th> {{work.estimate}} </th>
-            <th> {{work.employer}} </th>
-            <th> <a href="{% url 'users:detail' work.id %}"> توضیحات </a> </th>
-        </tr>    
-        {% endfor %}
-    {% else %}
-        <p>No users are available.</p>
-    {% endif %}
-  </table>
-</center>
-
-
-<div class="footnotes">
-    <p dir="auto"> صفحه {{current_page}} از {{num_pages}} </p>
-    {% if next_page %}
-        <p><a href="{% url 'users:index_by_page' next_page %}"> بعدی </a></p>
-    {% endif %}
-    {% if previous_page %}
-        <p dir="auto"><a href="{% url 'users:index_by_page' previous_page %}">قبلی</a></p>
-    {% endif %}
+<div class="container-fluid">
+    <div class="row">
+        <div id="main-content" class="col-md-9">
+            <center><h1>سامانه‌ی انجام کار</h1></center>
+            <table class="table table-striped" dir="rtl">
+                <thead>
+                <tr>
+                    <th>عنوان کار</th>
+                    <th>ارزش کار</th>
+                    <th>تخمین زمانی</th>
+                    <th>صاحب کار</th>
+                    <th>توضیحات</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if latest_work_list %}
+                    {% for work in latest_work_list %}
+                    <tr>
+                        <th> {{work.title}} </th>
+                        <th> {{work.price}} هزار تومان</th>
+                        <th> {{work.show_estimate}} </th>
+                        <th> {{work.employer}} </th>
+                        <th> <a href="{% url 'users:details' work.id %}"> توضیحات </a> </th>
+                    </tr>    
+                    {% endfor %}
+                {% else %}
+                    <p>No users are available.</p>
+                {% endif %}
+                </tbody>
+            </table>
+            <div id="tasks-paginator" dir="ltr">
+                <ul class="pagination">
+                    {% for page in page_num_list %}
+                            {% if page != current_page %}
+                        <li><a href="{% url 'users:index_by_page' page %}">{{page}}</a></li>
+                        {% else %}
+                        <li class="active"><a href="{% url 'users:index_by_page' page %}">{{page}}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-3" dir="rtl">
+            <h3> ورود </h3>
+            <form>
+                <div class="form-group">
+                    <input type="email" class="form-control" name="email" placeholder="ایمیل">
+                </div>
+                <button class="btn btn-default btn-block">ورود</button>
+            </form>
+            <hr/>
+            <h3>ثبت نام</h3>
+            <form>
+                <div class="form-group">
+                    <input name="username" maxlength="100" class="form-control" placeholder="نام‌کاربری">
+                </div>
+                <div class="form-group">
+                    <input name="email" class="form-control" placeholder="ایمیل" type="email">
+                </div>
+                <div class="form-group">
+                    <input name="password" class="form-control" placeholder="رمزعبور" type="password">
+                </div>
+                <div class="form-group">
+                    <input name="password_rpt" class="form-control" placeholder="تکرار رمز عبور" type="password">
+                </div>
+                <div class="form-group">
+                    <label><input name="master" type="checkbox">کارفرما</label>
+                </div>
+                <button class="btn btn-default btn-block">ثبت نام</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        <hr/>
+        <span> درباه‌ی ما</span>
+        <span>قوانین</span>
+    </footer>
 </div>
+</body>
+</html>
