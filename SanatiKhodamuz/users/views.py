@@ -1,15 +1,27 @@
+from ast import AsyncFunctionDef
 from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from .models import customUser, work
+from django.contrib.auth.models import User
 from django.http import Http404
 from django.core.paginator import Paginator
+from django.urls import reverse
+from django.contrib.auth import authenticate, logout, login
+from django.contrib import messages
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+
+from .tokens import account_activation_token
 
 def index(request, page_index = 1):
-    latest_work_list = work.objects.order_by('-pub_date')[:5]
-    page_lists = Paginator(latest_work_list, 20) 
+    latest_work_list = work.objects.all()
+    page_lists = Paginator(latest_work_list, 20)
     if page_index > page_lists.num_pages or page_index < 1:
         raise Http404("page number is out of bounds")
     context = {
@@ -17,6 +29,11 @@ def index(request, page_index = 1):
         'num_pages': page_lists.num_pages,
         'current_page': page_index,
     }
+    if request.user.is_authenticated:
+        context['logged_in'] = True
+        context['user'] = request.user
+    else:
+        context['logged_in'] = False
     page_num_list = [1]
     for i in range(-2, +3):
         p = page_index + i
@@ -36,3 +53,103 @@ def details(request, work_id):
     }
     response = render(request, 'users/details.html', context)
     return response
+
+def activateEmail(request, user, to_email): 
+    mail_subject = 'Activate your user account.'
+    message = render_to_string('../templates/activate_email.html', {
+        'user': user.username,
+        'domain': get_current_site(request).domain,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'token': account_activation_token.make_token(user),
+        'protocol': 'https' if request.is_secure() else 'http'
+    })
+    if send_mail(
+        mail_subject,
+        message, 
+        'SamaneAnjameKar@gmail.com',
+        [to_email],
+        fail_silently=False,
+    ):
+        messages.success(request, f'Dear {user},     please go to you email {to_email} inbox and click on \
+       received activation link to confirm and complete the registration. Note: Check your spam folder.')
+    else:
+        messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
+
+def usernameAlreadyExistsMessage(request, username):
+    messages.error(request, f'the username {username} already exists')
+
+def signupView(request):
+    try:
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        password_rpt = request.POST['password_rpt']
+        employer = False
+        if request.POST.get('master'):
+            employer = True
+    except (KeyError or username.DoesNotExist or email.DoesNotExist or password.DoesNotExist or password_rpt.DoesNotExist):
+        return HttpResponse("error")
+    else:
+        if password != password_rpt:
+            messages.error(request, f'password should match its repitition')
+            return HttpResponseRedirect(reverse('users:index'))
+        if User.objects.filter(username=username):
+            messages.error(request, f'username is not available')
+            return HttpResponseRedirect(reverse('users:index'))
+        user = User.objects.create_user(username, email, password)
+        user.is_active = False
+        user.save()
+        cu = customUser(user=user, isEmployer=employer)
+        cu.save()
+        activateEmail(request, user, email)
+        return index(request)
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Thank you for your email confirmation. Now you can login your account.')
+        return index(request)
+    else:
+        messages.error(request, 'Activation link is invalid!')
+        return index(request)
+
+def loginView(request):
+    try:
+        username = request.POST['username']
+        password = request.POST['password']
+    except (KeyError, username.DoesNotExist or password.DoesNotExist):
+        messages.error(request, "error: incorrect password")
+        return HttpResponseRedirect(reverse('users:index'))
+    else:  
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            messages.error(request, 'error: incorrect password')
+            return HttpResponseRedirect(reverse('users:index'))
+        login(request, user)
+        messages.success(request, 'you\'ve logged in succsessfuly')
+        return index(request)
+
+def logoutView(request):
+    logout(request)
+    return index(request)
+
+def addWork(request):
+    try:
+        title = request.POST['jobTitle']
+        price = request.POST['price']
+        description = request.POST['description']
+        estimate = request.POST['estimate']
+    except (KeyError):
+        messages.error(request, "error: lol")
+        return HttpResponseRedirect(reverse('users:addWork'))
+    else:
+        w = work(employer=request.user, title=title, price=price, descripton=description, estimate=estimate)
+        w.save()
+        return index(request)
