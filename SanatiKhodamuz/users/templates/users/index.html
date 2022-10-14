@@ -7,6 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
+    {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-dismissible alert-success">
+      <button type="button" class="close" data-dismiss="alert">
+      ×
+      </button>
+      <strong>{{message}}</strong>
+    </div>
+ {% endfor %}
+{% endif %}
 <div class="container-fluid">
     <div class="row">
         <div id="main-content" class="col-md-9">
@@ -49,17 +59,21 @@
                 </ul>
             </div>
         </div>
+        {% if logged_in == 0%}
         <div class="col-md-3" dir="rtl">
             <h3> ورود </h3>
-            <form>
+            <form action="{% url 'users:login' %}" method="post">
+            {% csrf_token %} 
                 <div class="form-group">
-                    <input type="email" class="form-control" name="email" placeholder="ایمیل">
+                    <input type="username" class="form-control" name="username" placeholder="نام‌کاربری">
+                    <input type="password" class="form-control" name="password" placeholder="رمز">  
                 </div>
                 <button class="btn btn-default btn-block">ورود</button>
             </form>
             <hr/>
             <h3>ثبت نام</h3>
-            <form>
+            <form action="{% url 'users:signup' %}" method="post">
+            {% csrf_token %}
                 <div class="form-group">
                     <input name="username" maxlength="100" class="form-control" placeholder="نام‌کاربری">
                 </div>
@@ -78,6 +92,19 @@
                 <button class="btn btn-default btn-block">ثبت نام</button>
             </form>
         </div>
+        {% else %}
+        <div class="col-md-3" dir="rtl">
+            <h3>شما با  {{user.username}} وارد شدید</h3>
+            <form action="{% url 'users:logout' %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-default btn-block">اضافه کردن کار</button>
+            </form>
+            <form action="{% url 'users:logout' %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-default btn-block">خروج</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
     <footer>
         <hr/>
