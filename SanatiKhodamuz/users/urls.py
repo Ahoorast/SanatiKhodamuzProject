@@ -14,4 +14,5 @@ urlpatterns = [
     path('activate/<uidb64>/<token>', views.activate, name='activate'),
     path('logout/', views.logoutView, name='logout'),
     path('addjob/', views.addWork, name='addWork'),
+    path('assignjob/<int:work_id>', views.assignJobToUser, name='assignJob'),
 ]

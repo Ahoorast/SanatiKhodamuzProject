@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="main.css">
@@ -13,7 +13,8 @@
             <h1> سامانه‌ی انجام کار</h1>
             <div>
                 <h3> افزودن کار جدید </h3>
-                <form action="index.html" class="form-horizontal">
+                <form action="{% url 'users:addWork' %}" method="post" class="form-horizontal">
+                    {% csrf_token %}
                     <div class="form-group">
                         <div class="col-sm-4"></div>
                         <div class="col-sm-6">
@@ -38,7 +39,7 @@
                     <div class="form-group">
                         <div class="col-sm-4"></div>
                         <div class="col-sm-6">
-                            <input name="estimated_duration" class="form-control" type="number">
+                            <input name="estimate" class="form-control" type="number">
                         </div>
                         <label class="control-label col-sm-2" for="title">زمان تخمینی</label>
                     </div>
@@ -50,9 +51,9 @@
             </div>
         </div>
         <div class="col-md-3">
-            <h5>شما با نام کاربری beautifulMaster1755 به عنوان کارفرما وارد سیستم شده‌اید.</h5>
-            <a class="btn btn-default btn-block" href="index.html">صفحه‌ی اصلی</a>
-            <a class="btn btn-default btn-block">خروج</a>
+            <h5>شما با نام کاربری {{user.username}} به عنوان کارفرما وارد سیستم شده‌اید.</h5>
+            <a class="btn btn-default btn-block" href="{% url 'users:index' %}">صفحه‌ی اصلی</a>
+            <a class="btn btn-default btn-block" href="{% url 'users:logout' %}">خروج</a>
         </div>
     </div>
     <footer>
