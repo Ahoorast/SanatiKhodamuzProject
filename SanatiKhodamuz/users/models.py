@@ -12,7 +12,10 @@ class customUser(models.Model):
     isEmployer = models.BooleanField(default=0)
     def __str__(self):
         return self.user.username
-
+    def hasJob(self):
+        if jobAssignments.objects.filter(employee=self.user):
+            return True
+        return False
 
 class work(models.Model):
     employer = models.ForeignKey(customUser, on_delete=models.CASCADE)
@@ -44,3 +47,13 @@ class work(models.Model):
                 timeEstimateForWork += " " + "و "
             timeEstimateForWork += str(hours) + " " + "ساعت" + " "
         return timeEstimateForWork
+    def hasEmployee(self):
+        if jobAssignments.objects.filter(job=self):
+            return True
+        return False
+
+class jobAssignments(models.Model):
+    job = models.OneToOneField(work, on_delete=models.CASCADE)
+    employee = models.OneToOneField(User, on_delete=models.CASCADE)
+    def __str__(self):
+        return {self.employee, self.job}

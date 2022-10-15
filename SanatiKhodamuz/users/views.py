@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
-from .models import customUser, work
+from .models import customUser, work, jobAssignments
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.core.paginator import Paginator
@@ -16,8 +16,35 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .tokens import account_activation_token
+
+
+user_login_required = user_passes_test(lambda user: user.is_active, login_url='/users')
+user_must_be_employer = user_passes_test(lambda user: user.is_active and customUser.objects.get(user=user).isEmployer, login_url='/users')
+user_must_be_employee = user_passes_test(lambda user: user.is_active and not customUser.objects.get(user=user).isEmployer, login_url='/users')
+
+def active_user_required(view_func):
+    decorated_view_func = login_required(user_login_required(view_func))
+    return decorated_view_func
+
+def employer_user_required(view_func):
+    decorated_view_func = login_required(user_must_be_employer(view_func))
+    return decorated_view_func
+
+def not_employer_user_required(view_func):
+    decorated_view_func = login_required(user_must_be_employee(view_func))
+    return decorated_view_func
+
+def addUserDataToContext(request, context):
+    if request.user.is_authenticated:
+        context['logged_in'] = True
+        context['user'] = request.user
+        context['cuser'] = customUser.objects.get(user=request.user)
+    else:
+        context['logged_in'] = False
+    return context
 
 def index(request, page_index = 1):
     latest_work_list = work.objects.all()
@@ -29,11 +56,7 @@ def index(request, page_index = 1):
         'num_pages': page_lists.num_pages,
         'current_page': page_index,
     }
-    if request.user.is_authenticated:
-        context['logged_in'] = True
-        context['user'] = request.user
-    else:
-        context['logged_in'] = False
+    context = addUserDataToContext(request, context)
     page_num_list = [1]
     for i in range(-2, +3):
         p = page_index + i
@@ -51,6 +74,9 @@ def details(request, work_id):
     context = {
         'work': w,
     }
+    context = addUserDataToContext(request, context)
+    print(context['cuser'].hasJob())
+    print("HI")
     response = render(request, 'users/details.html', context)
     return response
 
@@ -132,24 +158,50 @@ def loginView(request):
         if user is None:
             messages.error(request, 'error: incorrect password')
             return HttpResponseRedirect(reverse('users:index'))
+        if user.is_active == False:
+            messages.error(request, 'you must first activate your account')
+            return HttpResponseRedirect(reverse('users:index'))
         login(request, user)
         messages.success(request, 'you\'ve logged in succsessfuly')
         return index(request)
 
+@login_required(login_url='/users')
 def logoutView(request):
     logout(request)
     return index(request)
 
+@user_must_be_employer
 def addWork(request):
+    context = {}
+    context['user'] = request.user
     try:
-        title = request.POST['jobTitle']
+        title = request.POST['title']
         price = request.POST['price']
         description = request.POST['description']
         estimate = request.POST['estimate']
     except (KeyError):
-        messages.error(request, "error: lol")
-        return HttpResponseRedirect(reverse('users:addWork'))
+        response = render(request, 'users/new_task.html', context)
+        return response
     else:
-        w = work(employer=request.user, title=title, price=price, descripton=description, estimate=estimate)
+        employer = customUser.objects.get(user=request.user)
+        w = work(employer=employer, title=title, price=price, description=description, estimate=estimate)
         w.save()
+        print(w)
         return index(request)
+
+@user_must_be_employee
+def assignJobToUser(request, work_id):
+    user = request.user
+    w = work.objects.get(pk=work_id)
+    if work:
+        if jobAssignments.objects.filter(employee=user):
+            messages.error(request, 'you have already applied for a job')
+        elif jobAssignments.objects.filter(job=w):
+            messages.error(request, 'the job has already been applied for by another user')
+        else:
+            jobAssignment = jobAssignments(job=w, employee=user)
+            jobAssignment.save()
+            messages.success(request, 'you have succsessfully assigned this job to you')
+    else:
+        messages.error(request, 'given work_id does not exist')
+    return index(request)

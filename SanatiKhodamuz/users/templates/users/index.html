@@ -95,14 +95,10 @@
         {% else %}
         <div class="col-md-3" dir="rtl">
             <h3>شما با  {{user.username}} وارد شدید</h3>
-            <form action="{% url 'users:logout' %}" method="post">
-                {% csrf_token %}
-                <button class="btn btn-default btn-block">اضافه کردن کار</button>
-            </form>
-            <form action="{% url 'users:logout' %}" method="post">
-                {% csrf_token %}
-                <button class="btn btn-default btn-block">خروج</button>
-            </form>
+            {% if cuser.isEmployer == True %}
+                <a class="btn btn-default btn-block" href="{% url 'users:addWork' %}">اضافه کردن کار</a>
+            {% endif %}
+            <a class="btn btn-default btn-block" href="{% url 'users:logout' %}">خروج</a>
         </div>
         {% endif %}
     </div>

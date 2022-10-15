@@ -14,7 +14,9 @@
             <div>
                 <div class="col-sm-12">
                     <h3 style="display: inline-block">{{work.title}}</h3>
-                    <a class="btn btn-default">انجام می‌دم</a>
+                    {% if logged_in == 1 and cuser.isEmployer == 0 and cuser.hasJob == 0 and work.hasEmployee == 0%}
+                        <a class="btn btn-default" href="{% url 'users:assignJob' work.id %}">انجام می‌دم</a>
+                    {% endif %}
                     <hr/>
                 </div>
                 <div class="col-sm-2"></div>
@@ -30,9 +32,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <h5> شما با نام کاربری JigilWorker123 به عنوان کارمند وارد سیستم شده‌اید.</h5>
+            {% if logged_in == 1 %}
+                <h5> شما با نام کاربری {{user.username}} به عنوان کارمند وارد سیستم شده‌اید.</h5>
+            {% endif %}
             <a class="btn btn-default btn-block" href="{% url 'users:index' %}">صفحه‌ی اصلی</a>
-            <a class="btn btn-default btn-block">خروج</a>
+            {% if logged_in == 1 %}
+                <a class="btn btn-default btn-block" href="{% url 'users:logout' %}">خروج</a>
+            {% endif %}
         </div>
     </div>
     <footer>
