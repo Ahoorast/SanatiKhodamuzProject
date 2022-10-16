@@ -19,6 +19,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .tokens import account_activation_token
+from django.views.decorators.cache import cache_page
 
 
 user_login_required = user_passes_test(lambda user: user.is_active, login_url='/users')
@@ -75,8 +76,6 @@ def details(request, work_id):
         'work': w,
     }
     context = addUserDataToContext(request, context)
-    print(context['cuser'].hasJob())
-    print("HI")
     response = render(request, 'users/details.html', context)
     return response
 
