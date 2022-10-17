@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .tokens import account_activation_token
 from django.views.decorators.cache import cache_page
+from django.http import JsonResponse
 
 
 user_login_required = user_passes_test(lambda user: user.is_active, login_url='/users')
@@ -47,28 +48,34 @@ def addUserDataToContext(request, context):
         context['logged_in'] = False
     return context
 
-def index(request, page_index = 1):
-    latest_work_list = work.objects.all()
-    page_lists = Paginator(latest_work_list, 20)
-    if page_index > page_lists.num_pages or page_index < 1:
-        raise Http404("page number is out of bounds")
+def index(request):
+    latest_work_list = work.objects.all()[0:5]
     context = {
-        'latest_work_list': page_lists.page(page_index),
-        'num_pages': page_lists.num_pages,
-        'current_page': page_index,
+        'latest_work_list': latest_work_list,
     }
     context = addUserDataToContext(request, context)
-    page_num_list = [1]
-    for i in range(-2, +3):
-        p = page_index + i
-        if p < page_lists.num_pages and p > 1:
-            page_num_list.append(p)
-    if page_lists.num_pages > 1:
-        page_num_list.append(page_lists.num_pages)
-    context['page_num_list'] = page_num_list
     response = render(request, 'users/index.html', context)
     return response
-    
+
+def loadMore(request):
+    last_work_index = request.GET.get('last_work_index')
+    last_work_index = int(last_work_index)
+    tmp_latest_work_list = work.objects.all()[last_work_index:last_work_index+5]
+    latest_work_list = []
+    for w in tmp_latest_work_list: 
+        wDic = {}
+        wDic['id'] = w.id
+        wDic['title'] = w.title
+        wDic['price'] = w.price
+        wDic['show_estimate'] = w.show_estimate()
+        print(w.show_estimate())
+        wDic['employer'] = w.employer.user.username
+        latest_work_list.append(wDic)
+    data = {
+        'latest_work_list': latest_work_list,
+    }
+    response = JsonResponse(data=data)
+    return response
 
 def details(request, work_id):
     w = get_object_or_404(work, pk=work_id)
