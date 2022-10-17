@@ -17,4 +17,5 @@ urlpatterns = [
     path('logout/', views.logoutView, name='logout'),
     path('addjob/', views.addWork, name='addWork'),
     path('assignjob/<int:work_id>', views.assignJobToUser, name='assignJob'),
+    path('load/', views.loadMore, name="loadMore")
 ]
